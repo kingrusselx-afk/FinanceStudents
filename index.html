@@ -36,7 +36,7 @@
             padding-top: 80px; /* Beri ruang untuk Navigasi */
         }
 
-        /* BARU: Navigasi Utama */
+        /* Navigasi Utama */
         .main-nav {
             position: fixed; /* Tetap di atas */
             top: 0;
@@ -136,7 +136,7 @@
         #pemasukanBiasaGroup { margin-top: 16px; }
         #tarikGoalGroup { display: none; margin-top: 16px; }
         
-        /* BARU: Footer Credits */
+        /* Footer Credits */
         .credits-footer {
             text-align: center;
             padding: 30px 20px 20px 20px;
@@ -180,8 +180,8 @@
 <body>
 
     <nav class="main-nav">
-    <a href="reboot_otak_tracker.html">Reboot Otak</a>
-    <a href="index.html" class="active">Finance AI</a> 
+        <a href="reboot_otak_tracker.html">Reboot Otak</a>
+        <a href="index.html" class="active">Finance AI</a>
     </nav>
 
     <div class="container">
@@ -541,7 +541,7 @@
             
             const wantsDiff = budget.wants - balanceData.spentWants;
             let wantsWarning = wantsDiff < 0 ? `<span class="insight-warning">(Overbudget ${formatRupiah(Math.abs(wantsDiff))})</span>` : '';
-            insightsList.innerHTML += `<div class="insight-item"><span class="insight-label">Kemauan</span><span class="insight-value">${formatRupiah(balanceData.spentWants)} / ${formatRp(budget.wants)} ${wantsWarning}</span></div>`;
+            insightsList.innerHTML += `<div class="insight-item"><span class="insight-label">Kemauan</span><span class="insight-value">${formatRupiah(balanceData.spentWants)} / ${formatRupiah(budget.wants)} ${wantsWarning}</span></div>`;
             
             const totalSaved = balanceData.savings + balanceData.investment + balanceData.goals.reduce((acc, g) => acc + g.currentAmount, 0) + Object.values(balanceData.assets).reduce((a, b) => a + b, 0);
             insightsList.innerHTML += `<div class="insight-item"><span class="insight-label">Total Alokasi Tabungan</span><span class="insight-value">${formatRupiah(totalSaved)} (Target: ${formatRupiah(budget.savings)})</span></div>`;
@@ -890,4 +890,3 @@
     </script>
 </body>
 </html>
-
