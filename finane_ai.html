@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finane AI - Student Financial Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #14151a;
+            --bg-card: #1e2126;
+            --bg-input: #2b3036;
+            --border-color: #2b3036;
+            --text-primary: #eaecef;
+            --text-secondary: #aeb4bc;
+            --accent-yellow: #f0b90b;
+            --accent-green: #16c784;
+            --accent-red: #ea3943;
+            --accent-blue: #3861fb;
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'IBM Plex Mono', monospace;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: var(--font-main); 
+            background: var(--bg-dark); 
+            min-height: 100vh; 
+            padding: 20px; 
+            color: var(--text-primary); 
+            padding-top: 80px; /* Beri ruang untuk Navigasi */
+        }
+
+        /* BARU: Navigasi Utama */
+        .main-nav {
+            position: fixed; /* Tetap di atas */
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 15px 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .main-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .main-nav a:hover {
+            color: var(--accent-yellow);
+            background: var(--bg-input);
+        }
+        .main-nav a.active {
+            color: var(--bg-dark);
+            background: var(--accent-yellow);
+            font-weight: 700;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        .header h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 8px; color: var(--accent-yellow); }
+        .header p { font-size: 1rem; opacity: 0.9; font-weight: 300; color: var(--text-secondary); }
+        .card { background: var(--bg-card); border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h2, h3 { font-weight: 600; margin-bottom: 20px; }
+        
+        .balance-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .balance-card { color: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); background: var(--bg-input); }
+        .balance-card.success { background: var(--accent-green); }
+        .balance-card.warning { background: var(--accent-red); }
+        .balance-card.info { background: var(--accent-blue); }
+        .balance-card.total-net { background: var(--accent-yellow); color: var(--bg-dark); }
+        .balance-label { font-size: 0.85rem; opacity: 0.9; font-weight: 500; margin-bottom: 8px; }
+        .balance-amount { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 600; letter-spacing: -0.5px; }
+
+        .input-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: var(--text-secondary); }
+        input, select { width: 100%; padding: 12px 16px; border: 1px solid #474d57; border-radius: 8px; font-size: 1rem; transition: all 0.3s; font-family: var(--font-main); background: var(--bg-input); color: white; }
+        input[type="number"] { font-family: var(--font-mono); font-weight: 600; }
+        input:focus, select:focus { outline: none; border-color: var(--accent-yellow); box-shadow: 0 0 0 3px rgba(240, 185, 11, 0.2); }
+        .btn { background: var(--accent-yellow); color: var(--bg-dark); border: none; padding: 14px 28px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; width: 100%; margin-top: 8px; font-family: var(--font-main); }
+        .btn:hover { background: #fcd535; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(240, 185, 11, 0.2); }
+        .btn-secondary { background: var(--bg-input); color: var(--text-primary); }
+        .btn-secondary:hover { background: #474d57; box-shadow: none; }
+        .btn:active { transform: translateY(0); }
+        .btn-danger { background: var(--accent-red); color: white; }
+        .btn-danger:hover { background: #f05e65; }
+        .btn-small { padding: 8px 12px; font-size: 0.9rem; width: auto; margin-top: 0; }
+
+        .method-selector { display: flex; gap: 12px; margin-bottom: 20px; }
+        .method-btn { flex: 1; padding: 12px; border: 2px solid #474d57; background: var(--bg-input); color: var(--text-primary); border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+        .method-btn.active { background: var(--accent-yellow); color: var(--bg-dark); border-color: var(--accent-yellow); }
+        .chart-container { position: relative; height: 300px; margin-top: 20px; }
+        .transaction-list { max-height: 300px; overflow-y: auto; }
+        .transaction-item { padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .transaction-item:last-child { border-bottom: none; }
+        .transaction-type { font-weight: 500; color: var(--text-primary); }
+        .transaction-amount { font-family: var(--font-mono); font-weight: 600; font-size: 1.1rem; }
+        .transaction-amount.income { color: var(--accent-green); }
+        .transaction-amount.expense { color: var(--accent-red); }
+        .allocation-info { background: #2b3036; padding: 16px; border-radius: 8px; margin-top: 16px; }
+        .allocation-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #474d57; }
+        .allocation-item:last-child { border-bottom: none; }
+        .allocation-item span:last-child { font-family: var(--font-mono); font-weight: 600; }
+        
+        .asset-input-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .asset-input-group select { width: 35%; }
+        .asset-input-group input { width: 45%; }
+        .asset-input-group button { width: 20%; }
+
+        .goal-item { margin-bottom: 16px; }
+        .goal-details { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 500; }
+        .goal-progress-bar { width: 100%; background: var(--bg-input); border-radius: 4px; height: 10px; overflow: hidden; border: 1px solid #474d57; }
+        .goal-progress { background: var(--accent-green); height: 100%; transition: width 0.5s; }
+        
+        .insight-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #474d57; }
+        .insight-item:last-child { border-bottom: none; }
+        .insight-label { font-weight: 500; }
+        .insight-value { font-family: var(--font-mono); font-weight: 600; }
+        .insight-warning { color: var(--accent-red); font-weight: 600; }
+        
+        #subCategoryGroup { display: none; margin-top: 16px; }
+        #pemasukanBiasaGroup { margin-top: 16px; }
+        #tarikGoalGroup { display: none; margin-top: 16px; }
+        
+        /* BARU: Footer Credits */
+        .credits-footer {
+            text-align: center;
+            padding: 30px 20px 20px 20px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            border-top: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+        .credits-footer p {
+            margin-bottom: 15px;
+        }
+        .social-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .social-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s;
+        }
+        .social-btn.discord {
+            background: #5865F2;
+        }
+        .social-btn.discord:hover {
+            background: #4a56d4;
+        }
+        .social-btn.telegram {
+            background: #2AABEE;
+        }
+        .social-btn.telegram:hover {
+            background: #2293ca;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="main-nav">
+        <a href="reboot_otak_tracker.html">Reboot Otak</a>
+        <a href="finance_ai.html" class="active">Finance AI</a>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>💰 Finance AI</h1>
+            <p>Financial Tracker untuk Pelajar Cerdas</p>
+        </div>
+
+        <div class="card">
+            <div class="balance-section">
+                <div class="balance-card total-net">
+                    <div class="balance-label">Total Kekayaan (Net Worth)</div>
+                    <div class="balance-amount" id="totalNetWorth">Rp 0</div>
+                </div>
+                <div class="balance-card">
+                    <div class="balance-label">Saldo Liquid (Uang Siap Pakai)</div>
+                    <div class="balance-amount" id="totalBalance">Rp 0</div>
+                </div>
+                <div class="balance-card success">
+                    <div class="balance-label">Tabungan Umum</div>
+                    <div class="balance-amount" id="savingsBalance">Rp 0</div>
+                </div>
+                <div class="balance-card info">
+                    <div class="balance-label">Total Portofolio Investasi</div>
+                    <div class="balance-amount" id="investmentBalance">Rp 0</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="balanceChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Pelacak Aset (Assets Tracker)</h2>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px;">
+                Perkiraan nilai aset yang Anda miliki (Saham, Emas, Crypto, dll.).
+            </p>
+            <div class="asset-input-group">
+                <select id="assetType">
+                    <option value="saham">Saham</option>
+                    <option value="emas">Emas</option>
+                    <option value="crypto">Crypto</option>
+                    <option value="lainnya">Lainnya</option>
+                </select>
+                <input type="number" id="assetAmount" placeholder="500000">
+                <button class="btn btn-small" onclick="updateAsset()">Update Nilai</button>
+            </div>
+            <div class="allocation-info" id="assetList">
+                </div>
+        </div>
+
+        <div class="card">
+            <h2>Pendapatan Utama (Patokan Budget)</h2>
+            <div class="input-group">
+                <label>Jumlah Pendapatan Utama (Rp)</label>
+                <input type="number" id="mainIncomeAmount" placeholder="3000000">
+            </div>
+            <button class="btn btn-secondary" onclick="setPendapatanUtama()">Set/Update Pendapatan Utama</button>
+        </div>
+
+        <div class="card">
+            <h2>Metode Pengelolaan (Budget Plan)</h2>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px;">
+                Alokasi budget Anda berdasarkan <strong style="color: var(--accent-yellow); font-family: var(--font-mono);" id="mainIncomeDisplay">Rp 0</strong> dari Pendapatan Utama.
+            </p>
+            <div class="method-selector">
+                <button class="method-btn active" onclick="setMethod('503020')">50/30/20</button>
+                <button class="method-btn" onclick="setMethod('custom')">Spending Cap (Custom)</button>
+            </div>
+            <div class="allocation-info" id="allocationInfo"></div>
+            <div id="customAllocationInputs" style="display: none; margin-top: 20px; border-top: 1px solid #2b3036; padding-top: 16px;">
+                <h3 style="margin-bottom: 16px; font-size: 1.2rem;">Atur Persentase Custom</h3>
+                <div class="input-group"><label>Kebutuhan (%)</label><input type="number" id="customNeeds" value="30" oninput="validatePercentages()"></div>
+                <div class="input-group"><label>Kemauan (%)</label><input type="number" id="customWants" value="20" oninput="validatePercentages()"></div>
+                <div class="input-group"><label>Tabungan (%)</label><input type="number" id="customSavings" value="50" oninput="validatePercentages()"></div>
+                <div id="percentageError" style="color: var(--accent-red); font-size: 0.9rem; margin-bottom: 12px; display: none;">Total harus 100%</div>
+                <button class="btn" onclick="saveCustomAllocation()">Simpan Custom</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Analisis & Peringatan</h2>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px;">
+                Perbandingan antara Rencana Budget (dari Pendapatan Utama) dengan Pengeluaran Aktual Anda.
+            </p>
+            <div class="allocation-info" id="insightList">
+                </div>
+        </div>
+        
+        <div class="card">
+            <h2>Target Tabungan (Goals)</h2>
+            <div id="goalList" style="margin-bottom: 20px;">
+                </div>
+            <h3 style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">Buat Target Baru</h3>
+            <div class="input-group">
+                <label>Nama Target</label>
+                <input type="text" id="goalName" placeholder="Beli Laptop Baru">
+            </div>
+            <div class="input-group">
+                <label>Jumlah Target (Rp)</label>
+                <input type="number" id="goalTargetAmount" placeholder="5000000">
+            </div>
+            <button class="btn" onclick="addGoal()">Tambah Target</button>
+        </div>
+
+        <div class="card">
+            <h2>Tambah Pemasukan</h2>
+            <div class="input-group">
+                <label>Tipe Pemasukan</label>
+                <select id="incomeType" onchange="handleIncomeTypeChange()">
+                    <option value="biasa">Pemasukan Biasa</option>
+                    <option value="tarikGoal">Tarik Dana dari Goal</option>
+                </select>
+            </div>
+
+            <div id="pemasukanBiasaGroup">
+                <div class="input-group">
+                    <label>Alokasikan ke</label>
+                    <select id="incomeDestination">
+                        <option value="liquid">Saldo Liquid (Default)</option>
+                        <option value="savings">Tabungan Umum</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="tarikGoalGroup">
+                <div class="input-group">
+                    <label>Pilih Goal</label>
+                    <select id="withdrawGoalSelect">
+                        </select>
+                </div>
+            </div>
+
+            <div class="input-group" style="margin-top: 16px;">
+                <label>Jumlah (Rp)</label>
+                <input type="number" id="incomeAmount" placeholder="50000">
+            </div>
+            <div class="input-group">
+                <label>Keterangan</label>
+                <input type="text" id="incomeNote" placeholder="Bonus proyek / Tarik dana">
+            </div>
+            <button class="btn" onclick="addIncome()">Tambah Pemasukan</button>
+        </div>
+
+        <div class="card">
+            <h2>Tambah Pengeluaran</h2>
+            <div class="input-group">
+                <label>Kategori</label>
+                <select id="expenseCategory" onchange="handleCategoryChange()">
+                    <option value="needs">Kebutuhan</option>
+                    <option value="wants">Kemauan</option>
+                    <option value="savings">Alokasi ke Tabungan Umum</option>
+                    <option value="investment">Alokasi ke Uang Tunai (Investasi)</option>
+                </select>
+            </div>
+            
+            <div class="input-group" id="subCategoryGroup">
+                <label>Sub-Kategori</label>
+                <select id="expenseSubCategory"></select>
+            </div>
+
+            <div class="input-group">
+                <label>Jumlah (Rp)</label>
+                <input type="number" id="expenseAmount" placeholder="10000">
+            </div>
+            <div class="input-group">
+                <label>Keterangan</label>
+                <input type="text" id="expenseNote" placeholder="Bayar kas">
+            </div>
+            <button class="btn" onclick="addExpense()">Tambah Pengeluaran</button>
+        </div>
+
+        <div class="card">
+            <h2>Riwayat Transaksi</h2>
+            <div class="transaction-list" id="transactionList"></div>
+            <button class="btn btn-danger" onclick="clearData()" style="margin-top: 16px;">Reset Semua Data</button>
+        </div>
+
+        <footer class="credits-footer">
+            <p>Jika ada bug silahkan laporkan di sosial media kami</p>
+            <div class="social-buttons">
+                <a href="#" target="_blank" class="social-btn discord">Discord</a>
+                <a href="#" target="_blank" class="social-btn telegram">Telegram</a>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        let balanceData = {
+            total: 0,
+            pendapatanUtama: 0,
+            savings: 0,
+            investment: 0,
+            spentNeeds: 0,
+            spentWants: 0,
+            transactions: [],
+            method: '503020',
+            customAllocation: { needs: 30, wants: 20, savings: 50 },
+            assets: { saham: 0, emas: 0, crypto: 0, lainnya: 0 },
+            goals: []
+        };
+
+        let chartData = [];
+        let chart;
+        
+        const subCategories = {
+            needs: ['Makan Pokok', 'Transportasi', 'Tagihan', 'Uang Kas', 'Pendidikan', 'Kebutuhan Lain'],
+            wants: ['Jajan / Kopi', 'Hiburan', 'Game', 'Hobi', 'Belanja', 'Kemauan Lain']
+        };
+
+        function loadData() {
+            const saved = localStorage.getItem('finaneData');
+            if (saved) {
+                balanceData = JSON.parse(saved);
+                
+                if (!balanceData.customAllocation) balanceData.customAllocation = { needs: 30, wants: 20, savings: 50 };
+                if (balanceData.pendapatanUtama === undefined) balanceData.pendapatanUtama = 0;
+                if (!balanceData.assets) balanceData.assets = { saham: 0, emas: 0, crypto: 0, lainnya: 0 };
+                if (!balanceData.goals) balanceData.goals = [];
+                if (balanceData.spentNeeds === undefined) balanceData.spentNeeds = 0;
+                if (balanceData.spentWants === undefined) balanceData.spentWants = 0;
+                if (balanceData.needs !== undefined && balanceData.spentNeeds === 0) {
+                    balanceData.spentNeeds = balanceData.needs;
+                    delete balanceData.needs;
+                }
+
+                updateDisplay();
+                
+                chartData = [{ x: 0, y: 0 }];
+                let currentTotal = 0;
+                balanceData.transactions.forEach((t, index) => {
+                    let chartAmount = 0;
+                    if (t.type === 'income') {
+                        if (t.destination === 'liquid' || t.isWithdraw) {
+                            chartAmount = t.amount;
+                        }
+                    } else { // expense
+                        if (t.source === 'total') {
+                            chartAmount = -t.amount;
+                        }
+                    }
+                    currentTotal += chartAmount;
+                    chartData.push({ x: index + 1, y: currentTotal });
+                });
+                
+                updateChart();
+                updateTransactionList();
+                
+                document.querySelectorAll('.method-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if ((btn.textContent.includes('50/30/20') && balanceData.method === '503020') || (btn.textContent.includes('Spending Cap') && balanceData.method === 'custom')) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                const customInputs = document.getElementById('customAllocationInputs');
+                if (balanceData.method === 'custom') {
+                    customInputs.style.display = 'block';
+                    loadCustomInputs();
+                } else {
+                    customInputs.style.display = 'none';
+                }
+
+            } else {
+                initChart();
+                updateAllocationInfo();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('finaneData', JSON.stringify(balanceData));
+        }
+
+        function formatRupiah(amount) {
+            return 'Rp ' + (amount || 0).toLocaleString('id-ID');
+        }
+
+        function setMethod(method) {
+            balanceData.method = method;
+            document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            const customInputs = document.getElementById('customAllocationInputs');
+            if (method === 'custom') {
+                customInputs.style.display = 'block';
+                loadCustomInputs();
+            } else {
+                customInputs.style.display = 'none';
+            }
+            updateAllocationInfo();
+            updateInsights();
+            saveData();
+        }
+        function loadCustomInputs() {
+            document.getElementById('customNeeds').value = balanceData.customAllocation.needs;
+            document.getElementById('customWants').value = balanceData.customAllocation.wants;
+            document.getElementById('customSavings').value = balanceData.customAllocation.savings;
+        }
+        function validatePercentages() {
+            const needs = parseFloat(document.getElementById('customNeeds').value) || 0;
+            const wants = parseFloat(document.getElementById('customWants').value) || 0;
+            const savings = parseFloat(document.getElementById('customSavings').value) || 0;
+            const total = needs + wants + savings;
+            const errorDiv = document.getElementById('percentageError');
+            if (total !== 100) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = `Total persentase saat ini ${total}%. Harus 100%.`;
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        }
+        function saveCustomAllocation() {
+            const needs = parseFloat(document.getElementById('customNeeds').value) || 0;
+            const wants = parseFloat(document.getElementById('customWants').value) || 0;
+            const savings = parseFloat(document.getElementById('customSavings').value) || 0;
+            if (needs + wants + savings !== 100) {
+                document.getElementById('percentageError').style.display = 'block';
+                document.getElementById('percentageError').textContent = `Total persentase saat ini ${needs + wants + savings}%. Harus 100%.`;
+                return;
+            }
+            document.getElementById('percentageError').style.display = 'none';
+            balanceData.customAllocation = { needs, wants, savings };
+            updateAllocationInfo();
+            updateInsights();
+            saveData();
+            alert('Persentase custom berhasil disimpan!');
+        }
+        function setPendapatanUtama() {
+            const amount = parseFloat(document.getElementById('mainIncomeAmount').value);
+            if (isNaN(amount) || amount < 0) {
+                alert('Masukkan jumlah pendapatan utama yang valid!');
+                return;
+            }
+            balanceData.pendapatanUtama = amount;
+            alert('Pendapatan Utama berhasil di-set!');
+            updateDisplay();
+            saveData();
+        }
+
+        function getCurrentBudget() {
+            const baseAmount = balanceData.pendapatanUtama;
+            if (balanceData.method === '503020') {
+                return { needs: baseAmount * 0.5, wants: baseAmount * 0.3, savings: baseAmount * 0.2 };
+            } else {
+                const custom = balanceData.customAllocation;
+                return { needs: baseAmount * (custom.needs / 100), wants: baseAmount * (custom.wants / 100), savings: baseAmount * (custom.savings / 100) };
+            }
+        }
+        function updateInsights() {
+            const budget = getCurrentBudget();
+            const insightsList = document.getElementById('insightList');
+            insightsList.innerHTML = '';
+            
+            const needsDiff = budget.needs - balanceData.spentNeeds;
+            let needsWarning = needsDiff < 0 ? `<span class="insight-warning">(Overbudget ${formatRupiah(Math.abs(needsDiff))})</span>` : '';
+            insightsList.innerHTML += `<div class="insight-item"><span class="insight-label">Kebutuhan</span><span class="insight-value">${formatRupiah(balanceData.spentNeeds)} / ${formatRupiah(budget.needs)} ${needsWarning}</span></div>`;
+            
+            const wantsDiff = budget.wants - balanceData.spentWants;
+            let wantsWarning = wantsDiff < 0 ? `<span class="insight-warning">(Overbudget ${formatRupiah(Math.abs(wantsDiff))})</span>` : '';
+            insightsList.innerHTML += `<div class="insight-item"><span class="insight-label">Kemauan</span><span class="insight-value">${formatRupiah(balanceData.spentWants)} / ${formatRp(budget.wants)} ${wantsWarning}</span></div>`;
+            
+            const totalSaved = balanceData.savings + balanceData.investment + balanceData.goals.reduce((acc, g) => acc + g.currentAmount, 0) + Object.values(balanceData.assets).reduce((a, b) => a + b, 0);
+            insightsList.innerHTML += `<div class="insight-item"><span class="insight-label">Total Alokasi Tabungan</span><span class="insight-value">${formatRupiah(totalSaved)} (Target: ${formatRupiah(budget.savings)})</span></div>`;
+        }
+        function updateAllocationInfo() {
+            const budget = getCurrentBudget();
+            const info = document.getElementById('allocationInfo');
+            document.getElementById('mainIncomeDisplay').textContent = formatRupiah(balanceData.pendapatanUtama);
+            if (balanceData.method === '503020') {
+                info.innerHTML = `
+                    <div class="allocation-item"><span><strong>Kebutuhan (50%)</strong></span><span>${formatRupiah(budget.needs)}</span></div>
+                    <div class="allocation-item"><span><strong>Kemauan (30%)</strong></span><span>${formatRupiah(budget.wants)}</span></div>
+                    <div class="allocation-item"><span><strong>Tabungan/Investasi (20%)</strong></span><span>${formatRupiah(budget.savings)}</span></div>`;
+            } else {
+                const custom = balanceData.customAllocation;
+                info.innerHTML = `
+                    <div class="allocation-item"><span><strong>Kebutuhan (${custom.needs}%)</strong></span><span>${formatRupiah(budget.needs)}</span></div>
+                    <div class="allocation-item"><span><strong>Kemauan (${custom.wants}%)</strong></span><span>${formatRupiah(budget.wants)}</span></div>
+                    <div class="allocation-item"><span><strong>Tabungan (${custom.savings}%)</strong></span><span>${formatRupiah(budget.savings)}</span></div>`;
+            }
+            updateInsights();
+        }
+
+        function updateAsset() {
+            const type = document.getElementById('assetType').value;
+            const amount = parseFloat(document.getElementById('assetAmount').value);
+            
+            if (isNaN(amount) || amount < 0) {
+                alert('Masukkan jumlah aset yang valid!');
+                return;
+            }
+            
+            balanceData.assets[type] = amount;
+            document.getElementById('assetAmount').value = '';
+            
+            updateDisplay();
+            saveData();
+            alert(`Nilai aset ${type} berhasil di-update!`);
+        }
+
+        function updateAssetList() {
+            const assetList = document.getElementById('assetList');
+            assetList.innerHTML = '';
+            let totalAssets = 0;
+            for (const [type, amount] of Object.entries(balanceData.assets)) {
+                if (amount > 0) {
+                    assetList.innerHTML += `<div class="allocation-item"><span><strong>${type.charAt(0).toUpperCase() + type.slice(1)}</strong></span><span>${formatRupiah(amount)}</span></div>`;
+                }
+                totalAssets += amount;
+            }
+            if (totalAssets === 0) {
+                assetList.innerHTML = '<p style="color: var(--text-secondary); text-align: center; font-size: 0.9rem;">Belum ada aset non-tunai yang dilacak.</p>';
+            }
+            return totalAssets;
+        }
+        function addGoal() {
+            const name = document.getElementById('goalName').value;
+            const targetAmount = parseFloat(document.getElementById('goalTargetAmount').value);
+            if (!name || !targetAmount || targetAmount <= 0) { alert('Masukkan nama dan jumlah target yang valid!'); return; }
+            const newGoal = { id: 'goal_' + Date.now(), name: name, targetAmount: targetAmount, currentAmount: 0 };
+            balanceData.goals.push(newGoal);
+            document.getElementById('goalName').value = '';
+            document.getElementById('goalTargetAmount').value = '';
+            updateDisplay();
+            saveData();
+        }
+        function updateGoalList() {
+            const goalList = document.getElementById('goalList');
+            goalList.innerHTML = '';
+            if (balanceData.goals.length === 0) {
+                goalList.innerHTML = '<p style="color: var(--text-secondary); text-align: center; font-size: 0.9rem;">Belum ada target yang dibuat.</p>';
+                return;
+            }
+            balanceData.goals.forEach(g => {
+                const percentage = Math.min((g.currentAmount / g.targetAmount) * 100, 100);
+                goalList.innerHTML += `
+                    <div class="goal-item">
+                        <div class="goal-details">
+                            <span>${g.name} <strong style="color: var(--accent-yellow); font-family: var(--font-mono);">${percentage.toFixed(1)}%</strong></span>
+                            <span style="font-family: var(--font-mono);">${formatRupiah(g.currentAmount)} / ${formatRupiah(g.targetAmount)}</span>
+                        </div>
+                        <div class="goal-progress-bar">
+                            <div class="goal-progress" style="width: ${percentage}%;"></div>
+                        </div>
+                    </div>`;
+            });
+        }
+        
+        function updateGoalDropdowns() {
+            const categorySelect = document.getElementById('expenseCategory');
+            Array.from(categorySelect.options).forEach(opt => {
+                if (opt.value.startsWith('goal_')) opt.remove();
+            });
+            balanceData.goals.forEach(g => {
+                const option = document.createElement('option');
+                option.value = g.id;
+                option.textContent = `Alokasi ke: ${g.name}`;
+                categorySelect.appendChild(option);
+            });
+            
+            const withdrawSelect = document.getElementById('withdrawGoalSelect');
+            withdrawSelect.innerHTML = '';
+            balanceData.goals.forEach(g => {
+                const option = document.createElement('option');
+                option.value = g.id;
+                option.textContent = `${g.name} (${formatRupiah(g.currentAmount)})`;
+                withdrawSelect.appendChild(option);
+            });
+        }
+        
+        function handleIncomeTypeChange() {
+            const type = document.getElementById('incomeType').value;
+            const biasaGroup = document.getElementById('pemasukanBiasaGroup');
+            const tarikGroup = document.getElementById('tarikGoalGroup');
+            
+            if (type === 'biasa') {
+                biasaGroup.style.display = 'block';
+                tarikGroup.style.display = 'none';
+            } else {
+                biasaGroup.style.display = 'none';
+                tarikGroup.style.display = 'block';
+            }
+        }
+        
+        function handleCategoryChange() {
+            const category = document.getElementById('expenseCategory').value;
+            const subCategoryGroup = document.getElementById('subCategoryGroup');
+            const subCategorySelect = document.getElementById('expenseSubCategory');
+            if (subCategories[category]) {
+                subCategorySelect.innerHTML = '';
+                subCategories[category].forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub;
+                    option.textContent = sub;
+                    subCategorySelect.appendChild(option);
+                });
+                subCategoryGroup.style.display = 'block';
+            } else {
+                subCategoryGroup.style.display = 'none';
+            }
+        }
+
+        function addIncome() {
+            const type = document.getElementById('incomeType').value;
+            const amount = parseFloat(document.getElementById('incomeAmount').value);
+            const note = document.getElementById('incomeNote').value;
+            
+            if (!amount || amount <= 0) { alert('Masukkan jumlah yang valid!'); return; }
+            
+            let transactionNote = note;
+            let chartAmount = 0;
+            let chartDestination = 'none'; // 'liquid' atau 'none'
+
+            if (type === 'biasa') {
+                const destination = document.getElementById('incomeDestination').value;
+                if (destination === 'liquid') {
+                    balanceData.total += amount;
+                    transactionNote = note || 'Pemasukan Biasa (Liquid)';
+                    chartAmount = amount;
+                    chartDestination = 'liquid';
+                } else if (destination === 'savings') {
+                    balanceData.savings += amount;
+                    transactionNote = note || 'Pemasukan Biasa (Tabungan)';
+                }
+            } else if (type === 'tarikGoal') {
+                const goalId = document.getElementById('withdrawGoalSelect').value;
+                const goal = balanceData.goals.find(g => g.id === goalId);
+                
+                if (!goal) { alert('Goal tidak ditemukan!'); return; }
+                if (amount > goal.currentAmount) { alert('Jumlah penarikan melebihi dana di goal!'); return; }
+                
+                goal.currentAmount -= amount;
+                balanceData.total += amount;
+                transactionNote = note || `Tarik dana dari ${goal.name}`;
+                chartAmount = amount;
+                chartDestination = 'liquid';
+            }
+
+            balanceData.transactions.push({
+                type: 'income', amount: amount, note: transactionNote,
+                date: new Date().toISOString(),
+                destination: chartDestination === 'liquid' ? 'liquid' : document.getElementById('incomeDestination').value,
+                isWithdraw: type === 'tarikGoal'
+            });
+            
+            const lastChartPoint = chartData.length ? chartData[chartData.length - 1] : {y: 0};
+            if (chartDestination === 'liquid') {
+                chartData.push({ x: chartData.length, y: lastChartPoint.y + amount });
+            } else {
+                chartData.push({ x: chartData.length, y: lastChartPoint.y });
+            }
+
+            document.getElementById('incomeAmount').value = '';
+            document.getElementById('incomeNote').value = '';
+            
+            updateDisplay(); updateChart(); updateTransactionList(); saveData();
+        }
+
+        function addExpense() {
+            const category = document.getElementById('expenseCategory').value;
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const note = document.getElementById('expenseNote').value;
+            
+            if (!amount || amount <= 0) { alert('Masukkan jumlah yang valid!'); return; }
+            if (amount > balanceData.total) { alert('Saldo liquid tidak mencukupi!'); return; }
+
+            balanceData.total -= amount;
+            let transactionNote = note || category;
+            let subCategory = null;
+
+            if (category === 'savings') {
+                balanceData.savings += amount;
+                transactionNote = note || 'Alokasi Tabungan Umum';
+            } else if (category === 'investment') {
+                balanceData.investment += amount;
+                transactionNote = note || 'Alokasi Uang Tunai Investasi';
+            } else if (category === 'needs') {
+                balanceData.spentNeeds += amount;
+                subCategory = document.getElementById('expenseSubCategory').value;
+                transactionNote = note || subCategory;
+            } else if (category === 'wants') {
+                balanceData.spentWants += amount;
+                subCategory = document.getElementById('expenseSubCategory').value;
+                transactionNote = note || subCategory;
+            } else if (category.startsWith('goal_')) {
+                const goal = balanceData.goals.find(g => g.id === category);
+                if (goal) {
+                    goal.currentAmount += amount;
+                    transactionNote = note || `Alokasi ke ${goal.name}`;
+                }
+            }
+
+            balanceData.transactions.push({
+                type: 'expense', category: category, amount: amount,
+                note: transactionNote, date: new Date().toISOString(),
+                subCategory: subCategory, source: 'total'
+            });
+
+            const lastChartPoint = chartData.length ? chartData[chartData.length - 1] : {y: 0};
+            chartData.push({ x: chartData.length, y: lastChartPoint.y - amount });
+
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expenseNote').value = '';
+            
+            updateDisplay(); updateChart(); updateTransactionList(); saveData();
+        }
+
+        function updateDisplay() {
+            document.getElementById('totalBalance').textContent = formatRupiah(balanceData.total);
+            document.getElementById('savingsBalance').textContent = formatRupiah(balanceData.savings);
+            
+            document.getElementById('mainIncomeAmount').value = balanceData.pendapatanUtama;
+            
+            const totalNonTunaiAssets = updateAssetList();
+            
+            const totalInvestmentPortfolio = balanceData.investment + totalNonTunaiAssets;
+            document.getElementById('investmentBalance').textContent = formatRupiah(totalInvestmentPortfolio);
+            
+            const totalGoals = balanceData.goals.reduce((acc, g) => acc + g.currentAmount, 0);
+            const netWorth = balanceData.total + balanceData.savings + totalInvestmentPortfolio + totalGoals;
+            document.getElementById('totalNetWorth').textContent = formatRupiah(netWorth);
+            
+            updateGoalList();
+            updateGoalDropdowns();
+            
+            updateAllocationInfo();
+            
+            handleCategoryChange();
+            handleIncomeTypeChange();
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('balanceChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line', data: { datasets: [{
+                    label: 'Saldo Liquid', data: chartData, borderColor: 'var(--accent-yellow)',
+                    backgroundColor: 'rgba(240, 185, 11, 0.1)', borderWidth: 3, fill: true, tension: 0.4,
+                    pointRadius: 4, pointBackgroundColor: 'var(--accent-yellow)'
+                }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: {
+                        x: { type: 'linear', title: { display: true, text: 'Transaksi', font: { weight: '600' }, color: 'var(--text-secondary)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'var(--text-secondary)', font: { family: 'var(--font-mono)' } } },
+                        y: { title: { display: true, text: 'Saldo Liquid (Rp)', font: { weight: '600' }, color: 'var(--text-secondary)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'var(--text-secondary)', font: { family: 'var(--font-mono)' },
+                                callback: function(value) { return 'Rp ' + (value || 0).toLocaleString('id-ID'); } } }
+                    }
+                }
+            });
+        }
+        
+        function updateChart() {
+            if (chart) {
+                chart.data.datasets[0].data = chartData;
+                chart.update();
+            } else { 
+                initChart(); 
+            }
+        }
+        
+        function updateTransactionList() {
+            const list = document.getElementById('transactionList');
+            list.innerHTML = '';
+            if (!balanceData.transactions) balanceData.transactions = [];
+            balanceData.transactions.slice().reverse().forEach(t => {
+                const item = document.createElement('div');
+                item.className = 'transaction-item';
+                const date = new Date(t.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                item.innerHTML = `
+                    <div>
+                        <div class="transaction-type">${t.note}</div>
+                        <div style="font-size: 0.85rem; color: #718096;">${date}</div>
+                    </div>
+                    <div class="transaction-amount ${t.type}">
+                        ${t.type === 'income' ? '+' : '-'}${formatRupiah(t.amount)}
+                    </div>`;
+                list.appendChild(item);
+            });
+        }
+
+        function clearData() {
+            if (confirm('Yakin ingin menghapus semua data? Tindakan ini tidak dapat dibatalkan!')) {
+                localStorage.removeItem('finaneData');
+                balanceData = {
+                    total: 0, pendapatanUtama: 0, savings: 0, investment: 0,
+                    spentNeeds: 0, spentWants: 0, transactions: [],
+                    method: '503020',
+                    customAllocation: { needs: 30, wants: 20, savings: 50 },
+                    assets: { saham: 0, emas: 0, crypto: 0, lainnya: 0 },
+                    goals: []
+                };
+                chartData = [{x: 0, y: 0}];
+                updateDisplay();
+                updateChart();
+                updateTransactionList();
+                document.getElementById('customAllocationInputs').style.display = 'none';
+                if(document.querySelector('.method-btn.active')) {
+                    document.querySelector('.method-btn.active').classList.remove('active');
+                }
+                document.querySelector('.method-btn').classList.add('active');
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

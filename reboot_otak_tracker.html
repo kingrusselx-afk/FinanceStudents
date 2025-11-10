@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reboot Otak 30 Hari - Trading Style</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #0e1621;
+            color: #d1d4dc;
+            min-height: 100vh;
+            padding: 20px;
+            padding-top: 80px; /* Beri ruang untuk Navigasi */
+        }
+
+        /* BARU: Navigasi Utama */
+        .main-nav {
+            position: fixed; /* Tetap di atas */
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #1e2433;
+            border-bottom: 1px solid #2a2e39;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 15px 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .main-nav a {
+            color: #848e9c;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .main-nav a:hover {
+            color: #f0b90b;
+            background: #2a2e39;
+        }
+        .main-nav a.active {
+            color: #0e1621;
+            background: #f0b90b;
+            font-weight: 700;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #161a25;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            overflow: hidden;
+            margin-bottom: 20px; /* Beri jarak dari footer */
+        }
+        
+        .header {
+            background: #1e2433;
+            border-bottom: 1px solid #2a2e39;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.8em;
+            color: #f0b90b;
+            font-weight: 600;
+        }
+        
+        .header p {
+            color: #848e9c;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .real-time-clock {
+            color: #848e9c;
+            font-size: 0.9em;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+        
+        .download-btn {
+            background: #f0b90b;
+            color: #0e1621;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .download-btn:hover {
+            background: #f8d12f;
+            transform: translateY(-2px);
+        }
+        
+        .content {
+            padding: 20px 30px;
+        }
+        
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: #1e2433;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #2a2e39;
+        }
+        
+        .stat-label {
+            color: #848e9c;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+        
+        .stat-value.green {
+            color: #0ecb81;
+        }
+        
+        .stat-value.red {
+            color: #f6465d;
+        }
+        
+        .stat-value.yellow {
+            color: #f0b90b;
+        }
+        
+        .chart-container {
+            background: #1e2433;
+            border: 1px solid #2a2e39;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #2a2e39;
+        }
+        
+        .chart-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #d1d4dc;
+        }
+        
+        .chart-indicators {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+        }
+        
+        .indicator-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .indicator-dot.green {
+            background: #0ecb81;
+        }
+        
+        .indicator-dot.red {
+            background: #f6465d;
+        }
+        
+        .table-container {
+            background: #1e2433;
+            border: 1px solid #2a2e39;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #2a2e39;
+            color: #848e9c;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #2a2e39;
+            color: #d1d4dc;
+        }
+        
+        tr:hover {
+            background: #1a1f2e;
+        }
+        
+        select, input[type="time"] {
+            padding: 8px 12px;
+            border: 1px solid #2a2e39;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #161a25;
+            color: #d1d4dc;
+        }
+        
+        select:focus, input[type="time"]:focus {
+            outline: none;
+            border-color: #f0b90b;
+        }
+        
+        select.yes {
+            background: #0ecb81;
+            color: white;
+            border-color: #0ecb81;
+            font-weight: 600;
+        }
+        
+        select.no {
+            background: #f6465d;
+            color: white;
+            border-color: #f6465d;
+            font-weight: 600;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .reset-btn {
+            background: #f6465d;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .reset-btn:hover {
+            background: #d63649;
+            transform: translateY(-2px);
+        }
+        
+        .export-btn {
+            background: #2a2e39;
+            color: #d1d4dc;
+            padding: 12px 30px;
+            border: 1px solid #3e4455;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .export-btn:hover {
+            background: #3e4455;
+            transform: translateY(-2px);
+        }
+
+        .ticker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ticker-symbol {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #f0b90b;
+        }
+
+        .ticker-price {
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .ticker-change {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .ticker-change.up {
+            background: rgba(14, 203, 129, 0.2);
+            color: #0ecb81;
+        }
+
+        .ticker-change.down {
+            background: rgba(246, 70, 93, 0.2);
+            color: #f6465d;
+        }
+        
+        /* BARU: Footer Credits */
+        .credits-footer {
+            text-align: center;
+            padding: 20px;
+            color: #848e9c;
+            font-size: 0.9em;
+        }
+        .credits-footer p {
+            margin-bottom: 15px;
+        }
+        .social-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .social-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s;
+        }
+        .social-btn.discord {
+            background: #5865F2;
+        }
+        .social-btn.discord:hover {
+            background: #4a56d4;
+        }
+        .social-btn.telegram {
+            background: #2AABEE;
+        }
+        .social-btn.telegram:hover {
+            background: #2293ca;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="main-nav">
+        <a href="reboot_otak_tracker.html" class="active">Reboot Otak</a>
+        <a href="finance_ai.html">Finance AI</a>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <div>
+                <div class="ticker">
+                    <span class="ticker-symbol">BRAIN/USDT</span>
+                    <span class="ticker-price" id="currentPrice">0.00</span>
+                    <span class="ticker-change up" id="priceChange">+0.00%</span>
+                </div>
+                <p>🧠 Reboot Otak 30 Hari - Fase 1: Pemulihan</p>
+                <div id="realTimeClock" class="real-time-clock">Memuat waktu...</div>
+            </div>
+            <button class="download-btn" onclick="downloadHTML()">📥 Download HTML</button>
+        </div>
+        
+        <div class="content">
+            <div class="stats-bar">
+                <div class="stat-box">
+                    <div class="stat-label">Current Streak</div>
+                    <div class="stat-value green" id="streakCount">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Success Rate</div>
+                    <div class="stat-value yellow" id="successRate">0.00%</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Avg Sleep Time</div>
+                    <div class="stat-value" id="avgSleep">--:--</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Total Days</div>
+                    <div class="stat-value" id="totalDays">0/30</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">Performance Chart - 30 Days</div>
+                    <div class="chart-indicators">
+                        <div class="indicator">
+                            <div class="indicator-dot green"></div>
+                            <span>Success (Yes)</span>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-dot red"></div>
+                            <span>Failure (No)</span>
+                        </div>
+                    </div>
+                </div>
+                <canvas id="tradingChart"></canvas>
+            </div>
+            
+            <div class="table-container">
+                <table id="trackingTable">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Date</th>
+                            <th>No Fap Status</th>
+                            <th>Sleep Time</th>
+                            <th>24h Change</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="export-btn" onclick="exportCSV()">📊 Export CSV</button>
+                <button class="reset-btn" onclick="resetData()">🔄 Reset Data</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="credits-footer">
+        <p>Jika ada bug silahkan laporkan di sosial media kami</p>
+        <div class="social-buttons">
+            <a href="#" target="_blank" class="social-btn discord">Discord</a>
+            <a href="#" target="_blank" class="social-btn telegram">Telegram</a>
+        </div>
+    </footer>
+
+    <script>
+        let chart;
+        const days = 30;
+        let trackingData = [];
+
+        function updateClock() {
+            const now = new Date();
+            const optionsDate = {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            };
+            const optionsTime = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZoneName: 'short'
+            };
+            
+            const dateString = now.toLocaleDateString('id-ID', optionsDate);
+            const timeString = now.toLocaleTimeString('id-ID', optionsTime).replace(/\./g, ':'); 
+            
+            const clockElement = document.getElementById('realTimeClock');
+            if (clockElement) {
+                clockElement.innerHTML = `${dateString} | ${timeString}`;
+            }
+        }
+        
+        function loadData() {
+            const saved = localStorage.getItem('rebootOtakData');
+            if (saved) {
+                trackingData = JSON.parse(saved);
+            } else {
+                trackingData = Array.from({length: days}, (_, i) => ({
+                    day: i + 1,
+                    noFap: 'pilih',
+                    sleepTime: '',
+                    date: new Date(Date.now() + i * 86400000).toLocaleDateString('id-ID')
+                }));
+            }
+        }
+        
+        function saveData() {
+            localStorage.setItem('rebootOtakData', JSON.stringify(trackingData));
+        }
+        
+        function initTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            trackingData.forEach((data, index) => {
+                const row = tbody.insertRow();
+                
+                const cellDay = row.insertCell(0);
+                cellDay.textContent = `D${data.day}`;
+                cellDay.style.fontWeight = 'bold';
+                cellDay.style.color = '#f0b90b';
+                
+                const cellDate = row.insertCell(1);
+                cellDate.textContent = data.date;
+                cellDate.style.fontSize = '0.85em';
+                cellDate.style.color = '#848e9c';
+                
+                const cellFap = row.insertCell(2);
+                const selectFap = document.createElement('select');
+                selectFap.innerHTML = `
+                    <option value="pilih">-- Select --</option>
+                    <option value="yes">✓ Success</option>
+                    <option value="no">✗ Failed</option>
+                `;
+                selectFap.value = data.noFap;
+                selectFap.className = data.noFap;
+                selectFap.onchange = (e) => {
+                    trackingData[index].noFap = e.target.value;
+                    e.target.className = e.target.value;
+                    saveData();
+                    updateChart();
+                    updateStats();
+                };
+                cellFap.appendChild(selectFap);
+                
+                const cellSleep = row.insertCell(3);
+                const inputSleep = document.createElement('input');
+                inputSleep.type = 'time';
+                inputSleep.value = data.sleepTime;
+                inputSleep.onchange = (e) => {
+                    trackingData[index].sleepTime = e.target.value;
+                    saveData();
+                    updateStats();
+                };
+                cellSleep.appendChild(inputSleep);
+                
+                const cellChange = row.insertCell(4);
+                if (index > 0) {
+                    const prevStatus = trackingData[index - 1].noFap;
+                    const currStatus = data.noFap;
+                    if (currStatus !== 'pilih' && prevStatus !== 'pilih') {
+                        if (currStatus === 'yes' && prevStatus === 'no') {
+                            cellChange.innerHTML = '<span style="color: #0ecb81;">↗ +100%</span>';
+                        } else if (currStatus === 'no' && prevStatus === 'yes') {
+                            cellChange.innerHTML = '<span style="color: #f6465d;">↘ -100%</span>';
+                        } else {
+                            cellChange.innerHTML = '<span style="color: #848e9c;">→ 0%</span>';
+                        }
+                    } else {
+                        cellChange.innerHTML = '<span style="color: #848e9c;">--</span>';
+                    }
+                } else {
+                    cellChange.innerHTML = '<span style="color: #848e9c;">--</span>';
+                }
+            });
+        }
+        
+        function updateChart() {
+            const labels = trackingData.map(d => `D${d.day}`);
+            
+            let cumulativeScore = 100;
+            const priceData = trackingData.map(d => {
+                if (d.noFap === 'yes') {
+                    cumulativeScore += 10;
+                } else if (d.noFap === 'no') {
+                    cumulativeScore -= 15;
+                }
+                return d.noFap === 'pilih' ? null : cumulativeScore;
+            });
+            
+            const successPoints = trackingData.map((d, i) => 
+                d.noFap === 'yes' ? priceData[i] : null
+            );
+            const failurePoints = trackingData.map((d, i) => 
+                d.noFap === 'no' ? priceData[i] : null
+            );
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            const ctx = document.getElementById('tradingChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Brain Score',
+                            data: priceData,
+                            borderColor: '#0ecb81',
+                            backgroundColor: (context) => {
+                                const ctx = context.chart.ctx;
+                                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                                gradient.addColorStop(0, 'rgba(14, 203, 129, 0.3)');
+                                gradient.addColorStop(1, 'rgba(14, 203, 129, 0)');
+                                return gradient;
+                            },
+                            borderWidth: 2,
+                            tension: 0.1,
+                            fill: true,
+                            pointRadius: 0,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Success',
+                            data: successPoints,
+                            borderColor: '#0ecb81',
+                            backgroundColor: '#0ecb81',
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            showLine: false
+                        },
+                        {
+                            label: 'Failure',
+                            data: failurePoints,
+                            borderColor: '#f6465d',
+                            backgroundColor: '#f6465d',
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            showLine: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2.5,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e2433',
+                            titleColor: '#d1d4dc',
+                            bodyColor: '#d1d4dc',
+                            borderColor: '#2a2e39',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: '#2a2e39',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#848e9c',
+                                maxRotation: 0
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: '#2a2e39',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#848e9c',
+                                callback: function(value) {
+                                    return value.toFixed(0);
+                                }
+                            },
+                            position: 'right'
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+        
+        function updateStats() {
+            let currentStreak = 0;
+            for (let i = trackingData.length - 1; i >= 0; i--) {
+                if (trackingData[i].noFap === 'yes') {
+                    currentStreak++;
+                } else if (trackingData[i].noFap === 'no') {
+                    break;
+                }
+            }
+            
+            const completed = trackingData.filter(d => d.noFap !== 'pilih');
+            const successful = trackingData.filter(d => d.noFap === 'yes');
+            const successRate = completed.length > 0 
+                ? ((successful.length / completed.length) * 100).toFixed(2)
+                : 0;
+            
+            const sleepTimes = trackingData.filter(d => d.sleepTime).map(d => d.sleepTime);
+            let avgSleep = '--:--';
+            if (sleepTimes.length > 0) {
+                const totalMinutes = sleepTimes.reduce((sum, time) => {
+                    const [h, m] = time.split(':').map(Number);
+                    return sum + h * 60 + m;
+                }, 0);
+                const avgMinutes = Math.round(totalMinutes / sleepTimes.length);
+                const avgHour = Math.floor(avgMinutes / 60);
+                const avgMin = avgMinutes % 60;
+                avgSleep = `${String(avgHour).padStart(2, '0')}:${String(avgMin).padStart(2, '0')}`;
+            }
+            
+            const currentPrice = (100 + successful.length * 10).toFixed(2);
+            const priceChange = successRate;
+            
+            document.getElementById('currentPrice').textContent = currentPrice;
+            document.getElementById('priceChange').textContent = `${successRate >= 50 ? '+' : ''}${successRate}%`;
+            document.getElementById('priceChange').className = `ticker-change ${successRate >= 50 ? 'up' : 'down'}`;
+            
+            document.getElementById('streakCount').textContent = currentStreak;
+            document.getElementById('successRate').textContent = `${successRate}%`;
+            document.getElementById('avgSleep').textContent = avgSleep;
+            document.getElementById('totalDays').textContent = `${completed.length}/30`;
+        }
+        
+        function resetData() {
+            if (confirm('Reset semua data? Aksi ini tidak dapat dibatalkan.')) {
+                localStorage.removeItem('rebootOtakData');
+                trackingData = Array.from({length: days}, (_, i) => ({
+                    day: i + 1,
+                    noFap: 'pilih',
+                    sleepTime: '',
+                    date: new Date(Date.now() + i * 86400000).toLocaleDateString('id-ID')
+                }));
+                saveData();
+                initTable();
+                updateChart();
+                updateStats();
+            }
+        }
+        
+        function exportCSV() {
+            let csv = 'Day,Date,No Fap,Sleep Time\n';
+            trackingData.forEach(d => {
+                csv += `${d.day},${d.date},${d.noFap},${d.sleepTime}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reboot-otak-30-hari.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+        
+        function downloadHTML() {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reboot-otak-30-hari-trading-style.html';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+        
+        // Initialize
+        loadData();
+        initTable();
+        updateChart();
+        updateStats();
+
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
